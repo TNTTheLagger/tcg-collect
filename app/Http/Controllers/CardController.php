@@ -33,4 +33,42 @@ class CardController extends Controller
 
         return view($request->route()->getName() === 'home' ? 'welcome' : 'cards.index', compact('cards', 'decks'));
     }
+
+    public function show(string $card_name)
+    {
+        $card = Card::with(['properties', 'deck'])->where('name', $card_name)->firstOrFail();
+
+        return view('cards.show', compact('card'));
+    }
+
+    public function manage()
+    {
+        $decks = \App\Models\Deck::all();
+        return view('cards.manage', compact('decks'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'deck_id'            => 'required|exists:decks,id',
+            'name'               => 'required|string|max:255',
+            'properties'         => 'array',
+            'properties.*.name'  => 'required|string|max:255',
+            'properties.*.value' => 'required|string|max:255',
+        ]);
+
+        $card = \App\Models\Card::updateOrCreate(
+            ['name' => $validated['name']],
+            ['deck_id' => $validated['deck_id']]
+        );
+
+        if (isset($validated['properties'])) {
+            $card->properties()->delete(); // Clear existing properties
+            foreach ($validated['properties'] as $property) {
+                $card->properties()->create($property);
+            }
+        }
+
+        return redirect()->route('cards.manage')->with('success', 'Card saved successfully!');
+    }
 }

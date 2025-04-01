@@ -151,7 +151,7 @@
         <tbody>
             @foreach ($cards as $card)
                 <tr>
-                    <td>{{ $card->name }}</td>
+                    <td><a href="{{ route('cards.show', ['card_name' => $card->name]) }}">{{ $card->name }}</a></td>
                     <td>{{ $card->deck->name ?? 'No Deck' }}</td>
                     <td>
                         <ul>
